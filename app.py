@@ -22,8 +22,9 @@ os.environ["GROQ_API_KEY"]=GROQ_API_KEY
 index_name="custom-chatbot"
 pc = Pinecone(api_key=PINECONE_API_KEY)
 embeddings=load_embeddings()
+vector=True
 
-#run one time only
+#run one time only to create index
 if index_name not in [index.name for index in pc.list_indexes()]:
     pc.create_index(       
        name=index_name,
@@ -52,6 +53,7 @@ memory = ConversationBufferMemory(
 
 if 'uploaded_file' not in st.session_state:
     st.session_state.uploaded_file = None
+    st.session_state.embedding_upload=False
 if 'conversation_history' not in st.session_state:
     st.session_state.conversation_history = []
 
@@ -60,18 +62,21 @@ st.write("Upload a PDF file to start chat")
 
 uploaded_file = st.file_uploader("Upload a PDF file", type=["pdf"], label_visibility="collapsed")
 
-if uploaded_file is not None:
+if uploaded_file is not None and uploaded_file != st.session_state.uploaded_file:
     st.session_state.uploaded_file = uploaded_file
     upload_document(uploaded_file)
     document = load_document("PDF/" + uploaded_file.name)
     split_document=split_document(document)
-    #store embeddings
-    index_data = PineconeVectorStore.from_documents(
-    documents=split_document,
-    index_name=index_name,
-    embedding=embeddings )
+    st.session_state.embedding_upload=False    
+    if not st.session_state.embedding_upload:
+        #store embeddings
+        index_data = PineconeVectorStore.from_documents(
+        documents=split_document,
+        index_name=index_name,
+        embedding=embeddings )
+        st.session_state.embedding_upload=True
     
-elif st.session_state.uploaded_file is not None:
+elif st.session_state.uploaded_file is not None and uploaded_file is None:
     file_path = os.path.join("PDF", st.session_state.uploaded_file.name)
     if os.path.exists(file_path):
         os.remove(file_path)
@@ -79,6 +84,7 @@ elif st.session_state.uploaded_file is not None:
     index.delete(delete_all=True)
     st.session_state.uploaded_file = None
     st.session_state.conversation_history = []
+    st.session_state.embeddings_upload=False
     st.rerun()
 
 load_doc = PineconeVectorStore.from_existing_index(
