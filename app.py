@@ -22,9 +22,8 @@ os.environ["GROQ_API_KEY"]=GROQ_API_KEY
 index_name="custom-chatbot"
 pc = Pinecone(api_key=PINECONE_API_KEY)
 embeddings=load_embeddings()
-vector=True
 
-#run one time only to create index
+#run only one time to create index
 if index_name not in [index.name for index in pc.list_indexes()]:
     pc.create_index(       
        name=index_name,
@@ -36,7 +35,7 @@ if index_name not in [index.name for index in pc.list_indexes()]:
     ) 
     print(f"Index '{index_name}' created successfully")
 else:
-     print(f"Index '{index_name}' already exists")
+    print(f"Index '{index_name}' already exists")
 
 template=ChatPromptTemplate.from_messages(
     [
@@ -59,7 +58,6 @@ if 'conversation_history' not in st.session_state:
 
 st.title("Custom Chatbot")
 st.write("Upload a PDF file to start chat")
-
 uploaded_file = st.file_uploader("Upload a PDF file", type=["pdf"], label_visibility="collapsed")
 
 if uploaded_file is not None and uploaded_file != st.session_state.uploaded_file:

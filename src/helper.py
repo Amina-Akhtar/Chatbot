@@ -2,7 +2,6 @@ from langchain_community.document_loaders import PDFPlumberLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain.embeddings import HuggingFaceEmbeddings
 
-
 def upload_document(file):
     with open("PDF/" + file.name, "wb") as f:
         f.write(file.getbuffer())
